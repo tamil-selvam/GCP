@@ -1,5 +1,6 @@
 
 /** Step 1**//***Script to Create decompress job****/
+/* The Script uses Google Data Flow product to perform the ETL Work***/
 
 gcloud beta dataflow jobs run decompressdemo5 --gcs-location gs://dataflow-templates/latest/Bulk_Decompress_GCS_Files --parameters inputFilePattern=gs://tamilfinaldemo/compressed/*.gz,outputDirectory=gs://tamilfinaldemo/decompressed,outputFailureFile=gs://tamilfinaldemo/decompressed/failed.csv
 
@@ -8,15 +9,17 @@ gcloud beta dataflow jobs run decompressdemo5 --gcs-location gs://dataflow-templ
 /*** Google Storage Location***/
 gs://tamilfinaldemo/decompressed/Double_click_Impressions.csv
 
+/*** Scrit to create  tables in BigQuery and to insert data from csv file to Bigquery***/
+
 bq load --autodetect --source_format=CSV gcpdemo-197407:finaldemo.Activeviews gs://tamilfinaldemo/decompressed/Doubleclick_Activeviews.csv
 bq load --autodetect --source_format=CSV gcpdemo-197407:finaldemo.Clicks gs://tamilfinaldemo/decompressed/Doubleclick_Clickscsv.csv
 
 /****BG Query*****/
 select  Buyer,count(*) from [finaldemo.impression] group by Buyer
 
-/**Denormalization Job***/
+/**Denormalization Job ran in Big Query***/
 
-bq query --destination_table gcpdemo-197407:finaldemo.Denormalizedimpclickav --append --use_legacy_sql=false 'select a.*,b.impressionid as clickimpressionid,c.impressionid as activeviewimpressionid from finaldemo.impression a left join 
+bq query --destination_table gcpdemo-197407:finaldemo.Denormalizedimpclickav --append --use_legacy_sql=false 'select a.*,b.impressionid as clickimpressionid,c.impressionid as activeviewimpressionid from finaldemo.impression a left join
 finaldemo.Clicks b on a.impressionid=b.impressionid
-left join 
+left join
 finaldemo.Activeviews  c on a.impressionid=c.impressionid'
